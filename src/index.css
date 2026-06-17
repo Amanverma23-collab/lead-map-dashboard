@@ -947,3 +947,8 @@ p {
   border-color: var(--danger);
 }
 
+.tab-btn.active .interested-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+

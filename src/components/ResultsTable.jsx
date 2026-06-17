@@ -6,15 +6,18 @@ export default function ResultsTable({
   onBulkUpdateResults,
   onDeleteResults,
 }) {
-  const [activeTab, setActiveTab] = useState('leads'); // 'leads' or 'all'
+  const [activeTab, setActiveTab] = useState('leads'); // 'leads', 'interested', or 'all'
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('Reviews');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  // Filter leads vs all
+  // Filter leads vs all vs interested
   const filteredByTab = useMemo(() => {
     if (activeTab === 'leads') {
       return results.filter((r) => r.Has_Website === 'No');
+    }
+    if (activeTab === 'interested') {
+      return results.filter((r) => r.status === 'Interested');
     }
     return results;
   }, [results, activeTab]);
@@ -119,11 +122,18 @@ export default function ResultsTable({
     document.body.removeChild(link);
   };
 
-  const handleDownloadCSV = (isLeadsOnly) => {
-    const dataToExport = isLeadsOnly
-      ? results.filter((r) => r.Has_Website === 'No')
-      : results;
-    const filename = isLeadsOnly ? 'no_website_leads.csv' : 'all_results.csv';
+  const handleDownloadCSV = (type) => {
+    let dataToExport = results;
+    let filename = 'all_results.csv';
+
+    if (type === 'leads') {
+      dataToExport = results.filter((r) => r.Has_Website === 'No');
+      filename = 'no_website_leads.csv';
+    } else if (type === 'interested') {
+      dataToExport = results.filter((r) => r.status === 'Interested');
+      filename = 'interested_leads.csv';
+    }
+
     exportToCSV(dataToExport, filename);
   };
 
@@ -141,6 +151,7 @@ export default function ResultsTable({
   };
 
   const totalLeads = results.filter((r) => r.Has_Website === 'No').length;
+  const totalInterested = results.filter((r) => r.status === 'Interested').length;
   const totalAll = results.length;
 
   const renderSortArrow = (field) => {
@@ -159,6 +170,14 @@ export default function ResultsTable({
           >
             Leads (No Website)
             <span className="tab-badge">{totalLeads}</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'interested' ? 'active' : ''}`}
+            onClick={() => setActiveTab('interested')}
+          >
+            Interested Leads ⭐
+            <span className="tab-badge interested-badge">{totalInterested}</span>
           </button>
           <button
             type="button"
@@ -186,7 +205,7 @@ export default function ResultsTable({
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => handleDownloadCSV(true)}
+            onClick={() => handleDownloadCSV('leads')}
             disabled={totalLeads === 0}
           >
             <svg
@@ -207,8 +226,30 @@ export default function ResultsTable({
           </button>
           <button
             type="button"
+            className="btn-secondary btn-interested-csv"
+            onClick={() => handleDownloadCSV('interested')}
+            disabled={totalInterested === 0}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export Interested CSV
+          </button>
+          <button
+            type="button"
             className="btn-secondary"
-            onClick={() => handleDownloadCSV(false)}
+            onClick={() => handleDownloadCSV('all')}
             disabled={totalAll === 0}
           >
             <svg
@@ -325,7 +366,7 @@ export default function ResultsTable({
                   City {renderSortArrow('City')}
                 </th>
                 <th>Address</th>
-                {activeTab === 'all' && <th>Website</th>}
+                {(activeTab === 'all' || activeTab === 'interested') && <th>Website</th>}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -386,7 +427,7 @@ export default function ResultsTable({
                         {place.Address || 'No Address'}
                       </div>
                     </td>
-                    {activeTab === 'all' && (
+                    {(activeTab === 'all' || activeTab === 'interested') && (
                       <td>
                         {place.Has_Website === 'Yes' ? (
                           <a
