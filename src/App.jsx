@@ -85,7 +85,7 @@ export default function App() {
     
     // If starting fresh
     if (currentCityIndex === 0) {
-      setResults([]);
+      setResults((prev) => prev.filter((r) => r.status === 'Interested'));
       setLogs([]);
       addLog('Starting new scraping run...', 'info');
       // Timeout is needed because state update is async, but we can call searchRunner directly after setting refs
@@ -126,6 +126,7 @@ export default function App() {
     isPausedRef.current = false;
     setCurrentCityIndex(0);
     currentCityIndexRef.current = 0;
+    setResults((prev) => prev.filter((r) => r.status === 'Interested'));
     
     addLog('Scraping runner stopped and reset.', 'warn');
   };
