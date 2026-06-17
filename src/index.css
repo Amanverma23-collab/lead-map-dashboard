@@ -568,6 +568,7 @@ p {
 
 .results-table {
   width: 100%;
+  min-width: 1250px; /* Slide to view full info */
   border-collapse: collapse;
   text-align: left;
   font-size: 0.85rem;
@@ -659,6 +660,13 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: var(--transition);
+}
+
+.address-text:hover {
+  max-width: none;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .action-link {
@@ -764,5 +772,169 @@ p {
 
 .instruction-box a:hover {
   text-decoration: underline;
+}
+
+/* Custom Checkbox styling */
+.custom-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--card-border);
+  background: rgba(10, 12, 16, 0.6);
+  cursor: pointer;
+  accent-color: var(--accent);
+  transition: var(--transition);
+}
+
+.custom-checkbox:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
+}
+
+/* Row Selected Styling */
+.results-table tr.row-selected td {
+  background: rgba(0, 242, 254, 0.04) !important;
+  border-bottom: 1px solid rgba(0, 242, 254, 0.15);
+}
+
+/* Status Select Styles */
+.status-select {
+  background: rgba(10, 12, 16, 0.7);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+  max-width: 140px;
+}
+
+.status-select:focus {
+  border-color: var(--accent);
+}
+
+.status-select.status-not-contacted {
+  border-color: rgba(100, 116, 139, 0.4);
+  color: var(--text-secondary);
+}
+
+.status-select.status-interested {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.status-select.status-no-reply {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.status-select.status-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(17, 22, 34, 0.85);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 242, 254, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bulk-actions-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.selected-badge {
+  background: var(--primary-gradient);
+  color: #07090e;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.bulk-actions-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bulk-select {
+  background: rgba(10, 12, 16, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.bulk-select:focus {
+  border-color: var(--accent);
+}
+
+.btn-bulk {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-bulk:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-bulk-export:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-bulk-deselect:hover {
+  border-color: var(--text-secondary);
+}
+
+.btn-bulk-delete {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+}
+
+.btn-bulk-delete:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
 }
 

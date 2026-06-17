@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const DEFAULT_CITIES = [
   "Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner",

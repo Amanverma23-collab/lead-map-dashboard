@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SettingsPanel from './components/SettingsPanel';
 import ProgressPanel from './components/ProgressPanel';
 import StatsCard from './components/StatsCard';
@@ -24,7 +24,15 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentCityIndex, setCurrentCityIndex] = useState(0);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState(() => {
+    try {
+      const cached = localStorage.getItem('LEAD_MAP_RESULTS');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      console.error('Failed to parse cached results', e);
+      return [];
+    }
+  });
   const [logs, setLogs] = useState([]);
 
   // Refs to prevent closure staleness in active async loop
@@ -49,6 +57,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('GOOGLE_PLACES_API_KEY', apiKey);
   }, [apiKey]);
+
+  // Persist Results
+  useEffect(() => {
+    localStorage.setItem('LEAD_MAP_RESULTS', JSON.stringify(results));
+  }, [results]);
 
   // Add system logs helper
   const addLog = (text, type = 'info') => {
@@ -181,7 +194,20 @@ export default function App() {
           const uniqueMap = new Map();
           for (const row of combined) {
             const key = `${row.Name}-${row.Phone}`;
-            uniqueMap.set(key, row);
+            const existing = prev.find((p) => `${p.Name}-${p.Phone}` === key);
+            if (existing) {
+              uniqueMap.set(key, {
+                ...row,
+                status: existing.status || 'Not Contacted',
+                checked: existing.checked || false,
+              });
+            } else {
+              uniqueMap.set(key, {
+                status: 'Not Contacted',
+                checked: false,
+                ...row,
+              });
+            }
           }
           return Array.from(uniqueMap.values());
         });
@@ -219,6 +245,39 @@ export default function App() {
   const totalFound = results.length;
   const withWebsite = results.filter((r) => r.Has_Website === 'Yes').length;
   const leadsCount = results.filter((r) => r.Has_Website === 'No').length;
+
+  const handleUpdateResult = (key, updatedFields) => {
+    setResults((prev) =>
+      prev.map((item) => {
+        const itemKey = `${item.Name}-${item.Phone}`;
+        if (itemKey === key) {
+          return { ...item, ...updatedFields };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handleBulkUpdateResults = (keys, updatedFields) => {
+    setResults((prev) =>
+      prev.map((item) => {
+        const itemKey = `${item.Name}-${item.Phone}`;
+        if (keys.includes(itemKey)) {
+          return { ...item, ...updatedFields };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handleDeleteResults = (keys) => {
+    setResults((prev) =>
+      prev.filter((item) => {
+        const itemKey = `${item.Name}-${item.Phone}`;
+        return !keys.includes(itemKey);
+      })
+    );
+  };
 
   return (
     <div className="app-container">
@@ -282,7 +341,12 @@ export default function App() {
         </aside>
 
         <main style={{ minHeight: '650px' }}>
-          <ResultsTable results={results} />
+          <ResultsTable
+            results={results}
+            onUpdateResult={handleUpdateResult}
+            onBulkUpdateResults={handleBulkUpdateResults}
+            onDeleteResults={handleDeleteResults}
+          />
         </main>
       </div>
     </div>

@@ -1,6 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
-export default function ResultsTable({ results = [] }) {
+export default function ResultsTable({
+  results = [],
+  onUpdateResult,
+  onBulkUpdateResults,
+  onDeleteResults,
+}) {
   const [activeTab, setActiveTab] = useState('leads'); // 'leads' or 'all'
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('Reviews');
@@ -65,19 +70,35 @@ export default function ResultsTable({ results = [] }) {
     }
   };
 
-  const handleDownloadCSV = (isLeadsOnly) => {
-    const dataToExport = isLeadsOnly
-      ? results.filter((r) => r.Has_Website === 'No')
-      : results;
+  // Checkbox state calculations
+  const selectedResults = useMemo(() => results.filter((r) => r.checked), [results]);
+  const selectedCount = selectedResults.length;
 
+  const allVisibleChecked = useMemo(() => {
+    if (sortedResults.length === 0) return false;
+    return sortedResults.every((r) => r.checked);
+  }, [sortedResults]);
+
+  const handleSelectAllChange = (e) => {
+    const isChecked = e.target.checked;
+    const keys = sortedResults.map((r) => `${r.Name}-${r.Phone}`);
+    onBulkUpdateResults(keys, { checked: isChecked });
+  };
+
+  const exportToCSV = (dataToExport, filename) => {
     if (dataToExport.length === 0) return;
 
-    const headers = ['City', 'Name', 'Address', 'Phone', 'Rating', 'Reviews', 'Has_Website', 'Website'];
+    const headers = ['City', 'Name', 'Address', 'Phone', 'Rating', 'Reviews', 'Has_Website', 'Website', 'Status'];
     const csvRows = [headers.join(',')];
 
     for (const row of dataToExport) {
       const values = headers.map((header) => {
-        const val = row[header] === undefined || row[header] === null ? '' : row[header];
+        let val;
+        if (header === 'Status') {
+          val = row.status || 'Not Contacted';
+        } else {
+          val = row[header] === undefined || row[header] === null ? '' : row[header];
+        }
         // Escape quotes
         const escaped = String(val).replace(/"/g, '""');
         return `"${escaped}"`;
@@ -89,7 +110,6 @@ export default function ResultsTable({ results = [] }) {
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const filename = isLeadsOnly ? 'no_website_leads.csv' : 'all_results.csv';
 
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
@@ -97,6 +117,27 @@ export default function ResultsTable({ results = [] }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDownloadCSV = (isLeadsOnly) => {
+    const dataToExport = isLeadsOnly
+      ? results.filter((r) => r.Has_Website === 'No')
+      : results;
+    const filename = isLeadsOnly ? 'no_website_leads.csv' : 'all_results.csv';
+    exportToCSV(dataToExport, filename);
+  };
+
+  const handleExportSelected = () => {
+    exportToCSV(selectedResults, 'selected_leads.csv');
+  };
+
+  const getStyleClassForStatus = (status) => {
+    switch (status) {
+      case 'Interested': return 'status-interested';
+      case 'No Reply': return 'status-no-reply';
+      case 'Rejected': return 'status-rejected';
+      default: return 'status-not-contacted';
+    }
   };
 
   const totalLeads = results.filter((r) => r.Has_Website === 'No').length;
@@ -189,6 +230,63 @@ export default function ResultsTable({ results = [] }) {
         </div>
       </div>
 
+      {selectedCount > 0 && (
+        <div className="bulk-actions-bar">
+          <div className="bulk-actions-info">
+            <span className="selected-badge">{selectedCount}</span>
+            <span>selected</span>
+          </div>
+          <div className="bulk-actions-controls">
+            <select
+              className="bulk-select"
+              onChange={(e) => {
+                if (e.target.value) {
+                  const keys = selectedResults.map((r) => `${r.Name}-${r.Phone}`);
+                  onBulkUpdateResults(keys, { status: e.target.value });
+                  e.target.value = '';
+                }
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled>Change Status...</option>
+              <option value="Not Contacted">Not Contacted</option>
+              <option value="No Reply">No Reply</option>
+              <option value="Interested">Interested</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+            <button
+              type="button"
+              className="btn-bulk btn-bulk-export"
+              onClick={handleExportSelected}
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              className="btn-bulk btn-bulk-deselect"
+              onClick={() => {
+                const keys = selectedResults.map((r) => `${r.Name}-${r.Phone}`);
+                onBulkUpdateResults(keys, { checked: false });
+              }}
+            >
+              Deselect All
+            </button>
+            <button
+              type="button"
+              className="btn-bulk btn-bulk-delete"
+              onClick={() => {
+                if (confirm(`Are you sure you want to delete ${selectedCount} selected lead(s)?`)) {
+                  const keys = selectedResults.map((r) => `${r.Name}-${r.Phone}`);
+                  onDeleteResults(keys);
+                }
+              }}
+            >
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="table-wrapper">
         {sortedResults.length === 0 ? (
           <div className="empty-state">
@@ -204,9 +302,18 @@ export default function ResultsTable({ results = [] }) {
           <table className="results-table">
             <thead>
               <tr>
+                <th style={{ width: '40px', padding: '1rem 0.75rem', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={allVisibleChecked}
+                    onChange={handleSelectAllChange}
+                    className="custom-checkbox"
+                  />
+                </th>
                 <th className="sortable" onClick={() => handleSort('Name')}>
                   Business Name {renderSortArrow('Name')}
                 </th>
+                <th style={{ width: '150px' }}>Status</th>
                 <th className="sortable" onClick={() => handleSort('Reviews')}>
                   Reviews {renderSortArrow('Reviews')}
                 </th>
@@ -223,71 +330,94 @@ export default function ResultsTable({ results = [] }) {
               </tr>
             </thead>
             <tbody>
-              {sortedResults.map((place, idx) => (
-                <tr key={`${place.Name}-${place.Phone}-${idx}`}>
-                  <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{place.Name}</td>
-                  <td>
-                    <span className="reviews-count">{place.Reviews} reviews</span>
-                  </td>
-                  <td>
-                    {place.Rating ? (
-                      <span className="rating-badge">
-                        ★ {place.Rating}
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>N/A</span>
-                    )}
-                  </td>
-                  <td>
-                    {place.Phone ? (
-                      <a href={`tel:${place.Phone}`} className="phone-link">
-                        {place.Phone}
-                      </a>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>No Phone</span>
-                    )}
-                  </td>
-                  <td>
-                    <span className="badge" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                      {place.City}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="address-text" title={place.Address}>
-                      {place.Address || 'No Address'}
-                    </div>
-                  </td>
-                  {activeTab === 'all' && (
+              {sortedResults.map((place, idx) => {
+                const itemKey = `${place.Name}-${place.Phone}`;
+                return (
+                  <tr key={`${place.Name}-${place.Phone}-${idx}`} className={place.checked ? 'row-selected' : ''}>
+                    <td style={{ textAlign: 'center', padding: '1rem 0.75rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!place.checked}
+                        onChange={(e) => onUpdateResult(itemKey, { checked: e.target.checked })}
+                        className="custom-checkbox"
+                      />
+                    </td>
+                    <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{place.Name}</td>
                     <td>
-                      {place.Has_Website === 'Yes' ? (
-                        <a
-                          href={place.Website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="badge yes"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          Yes
-                        </a>
+                      <select
+                        value={place.status || 'Not Contacted'}
+                        onChange={(e) => onUpdateResult(itemKey, { status: e.target.value })}
+                        className={`status-select ${getStyleClassForStatus(place.status)}`}
+                      >
+                        <option value="Not Contacted">Not Contacted</option>
+                        <option value="No Reply">No Reply</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    </td>
+                    <td>
+                      <span className="reviews-count">{place.Reviews} reviews</span>
+                    </td>
+                    <td>
+                      {place.Rating ? (
+                        <span className="rating-badge">
+                          ★ {place.Rating}
+                        </span>
                       ) : (
-                        <span className="badge no">No</span>
+                        <span style={{ color: 'var(--text-muted)' }}>N/A</span>
                       )}
                     </td>
-                  )}
-                  <td>
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        `${place.Name} ${place.Address}`
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="action-link"
-                    >
-                      Maps ↗
-                    </a>
-                  </td>
-                </tr>
-              ))}
+                    <td>
+                      {place.Phone ? (
+                        <a href={`tel:${place.Phone}`} className="phone-link">
+                          {place.Phone}
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>No Phone</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="badge" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        {place.City}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="address-text" title={place.Address}>
+                        {place.Address || 'No Address'}
+                      </div>
+                    </td>
+                    {activeTab === 'all' && (
+                      <td>
+                        {place.Has_Website === 'Yes' ? (
+                          <a
+                            href={place.Website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="badge yes"
+                            style={{ textDecoration: 'none' }}
+                          >
+                            Yes
+                          </a>
+                        ) : (
+                          <span className="badge no">No</span>
+                        )}
+                      </td>
+                    )}
+                    <td>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${place.Name} ${place.Address}`
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="action-link"
+                      >
+                        Maps ↗
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
