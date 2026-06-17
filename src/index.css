@@ -145,6 +145,11 @@ p {
   align-items: start;
 }
 
+.dashboard-grid > main {
+  min-width: 0;
+  width: 100%;
+}
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
@@ -564,6 +569,10 @@ p {
 .table-wrapper::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .results-table {
