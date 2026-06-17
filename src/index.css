@@ -965,3 +965,138 @@ p {
   color: #34d399 !important;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem 1rem;
+  }
+
+  .glass-card {
+    padding: 1.25rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .api-badge {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+    min-height: 80px;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+    margin-top: 0.25rem;
+  }
+
+  .dashboard-grid {
+    gap: 1rem;
+  }
+
+  /* Filter Panel stacking on mobile */
+  .filter-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .download-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .download-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tabs responsiveness */
+  .tabs-container {
+    margin-bottom: 1rem;
+  }
+
+  .tabs-list {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .tab-btn {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* Bulk Actions responsive stack */
+  .bulk-actions-bar {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .bulk-actions-info {
+    justify-content: center;
+  }
+
+  .bulk-actions-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .bulk-select,
+  .btn-bulk {
+    flex: 1 1 calc(50% - 0.25rem);
+    width: auto;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .btn-bulk-delete {
+    flex: 1 1 100%; /* Delete spans full width of controls on mobile for emphasis */
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .city-input-wrapper {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .city-add-btn {
+    width: 100%;
+  }
+}
+
