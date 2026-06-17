@@ -165,59 +165,57 @@ export default function App() {
         if (!response.ok) {
           const errorMsg = await response.text();
           addLog(`Error querying Places API for ${city} (HTTP ${response.status}): ${errorMsg.slice(0, 100)}`, 'error');
-          // Increment progress anyway so we don't get stuck in an infinite loop
-          currentCityIndexRef.current += 1;
-          setCurrentCityIndex(currentCityIndexRef.current);
-          continue;
-        }
-
-        const data = await response.json();
-        const places = data.places || [];
-        addLog(`Found ${places.length} businesses in ${city}.`, 'success');
-
-        const cityRows = places.map((place) => {
-          const website = place.websiteUri || '';
-          return {
-            City: city,
-            Name: place.displayName?.text || '',
-            Address: place.formattedAddress || '',
-            Phone: place.nationalPhoneNumber || '',
-            Rating: place.rating || '',
-            Reviews: place.userRatingCount || 0,
-            Has_Website: website ? 'Yes' : 'No',
-            Website: website,
-          };
-        });
-
-        // Update main results, eliminating duplicates (by Name & Phone)
-        setResults((prev) => {
-          const combined = [...prev, ...cityRows];
-          const uniqueMap = new Map();
-          for (const row of combined) {
-            const key = `${row.Name}-${row.Phone}`;
-            const existing = prev.find((p) => `${p.Name}-${p.Phone}` === key);
-            if (existing) {
-              uniqueMap.set(key, {
-                ...row,
-                status: existing.status || 'Not Contacted',
-                checked: existing.checked || false,
-              });
-            } else {
-              uniqueMap.set(key, {
-                status: 'Not Contacted',
-                checked: false,
-                ...row,
-              });
-            }
-          }
-          return Array.from(uniqueMap.values());
-        });
-
-        const newLeads = cityRows.filter((r) => r.Has_Website === 'No');
-        if (newLeads.length > 0) {
-          addLog(`Success! Found ${newLeads.length} leads without website in ${city}.`, 'success');
         } else {
-          addLog(`All businesses in ${city} have websites listed.`, 'info');
+          const data = await response.json();
+          const places = data.places || [];
+          addLog(`Found ${places.length} businesses in ${city}.`, 'success');
+
+          const cityRows = places.map((place) => {
+            const website = place.websiteUri || '';
+            return {
+              City: city,
+              Name: place.displayName?.text || '',
+              Address: place.formattedAddress || '',
+              Phone: place.nationalPhoneNumber || '',
+              Rating: place.rating || '',
+              Reviews: place.userRatingCount || 0,
+              Has_Website: website ? 'Yes' : 'No',
+              Website: website,
+            };
+          });
+
+          // Update main results, eliminating duplicates (by Name & Phone)
+          setResults((prev) => {
+            const combined = [...prev, ...cityRows];
+            const uniqueMap = new Map();
+            for (const row of combined) {
+              const key = `${row.Name}-${row.Phone}`;
+              const existing = prev.find((p) => `${p.Name}-${p.Phone}` === key);
+              if (existing) {
+                uniqueMap.set(key, {
+                  ...row,
+                  status: existing.status || 'Not Contacted',
+                  checked: existing.checked || false,
+                  comment: existing.comment || '',
+                });
+              } else {
+                uniqueMap.set(key, {
+                  status: 'Not Contacted',
+                  checked: false,
+                  comment: '',
+                  ...row,
+                });
+              }
+            }
+            return Array.from(uniqueMap.values());
+          });
+
+          const newLeads = cityRows.filter((r) => r.Has_Website === 'No');
+          if (newLeads.length > 0) {
+            addLog(`Success! Found ${newLeads.length} leads without website in ${city}.`, 'success');
+          } else {
+            addLog(`All businesses in ${city} have websites listed.`, 'info');
+          }
         }
 
       } catch (error) {
