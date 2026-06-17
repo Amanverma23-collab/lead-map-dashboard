@@ -577,10 +577,23 @@ p {
 
 .results-table {
   width: 100%;
-  min-width: 1250px; /* Slide to view full info */
+  min-width: 1450px; /* Slide to view full info */
   border-collapse: collapse;
   text-align: left;
   font-size: 0.85rem;
+}
+
+.comment-input {
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary) !important;
+  transition: var(--transition);
+}
+
+.comment-input:focus {
+  border-color: var(--accent) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.2) !important;
 }
 
 .results-table th {

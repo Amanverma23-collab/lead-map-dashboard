@@ -91,7 +91,7 @@ export default function ResultsTable({
   const exportToCSV = (dataToExport, filename) => {
     if (dataToExport.length === 0) return;
 
-    const headers = ['City', 'Name', 'Address', 'Phone', 'Rating', 'Reviews', 'Has_Website', 'Website', 'Status'];
+    const headers = ['City', 'Name', 'Address', 'Phone', 'Rating', 'Reviews', 'Has_Website', 'Website', 'Status', 'Comment'];
     const csvRows = [headers.join(',')];
 
     for (const row of dataToExport) {
@@ -99,6 +99,8 @@ export default function ResultsTable({
         let val;
         if (header === 'Status') {
           val = row.status || 'Not Contacted';
+        } else if (header === 'Comment') {
+          val = row.comment || '';
         } else {
           val = row[header] === undefined || row[header] === null ? '' : row[header];
         }
@@ -355,6 +357,7 @@ export default function ResultsTable({
                   Business Name {renderSortArrow('Name')}
                 </th>
                 <th style={{ width: '150px' }}>Status</th>
+                <th style={{ minWidth: '220px' }}>Comments / Notes</th>
                 <th className="sortable" onClick={() => handleSort('Reviews')}>
                   Reviews {renderSortArrow('Reviews')}
                 </th>
@@ -395,6 +398,22 @@ export default function ResultsTable({
                         <option value="Interested">Interested</option>
                         <option value="Rejected">Rejected</option>
                       </select>
+                    </td>
+                    <td>
+                      {place.status === 'Interested' ? (
+                        <input
+                          type="text"
+                          value={place.comment || ''}
+                          onChange={(e) => onUpdateResult(itemKey, { comment: e.target.value })}
+                          className="form-input comment-input"
+                          placeholder="Add comment (e.g. called, interested)..."
+                          style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', width: '100%', minWidth: '200px' }}
+                        />
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                          Mark Interested to comment
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className="reviews-count">{place.Reviews} reviews</span>
